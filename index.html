@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <title>Jisajili - Vuna Pesa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <img src="assets/images/logo_vuna_pesa.svg" alt="Logo" width="38" class="me-2">
+        Vuna Pesa Tanzania
+      </a>
+    </div>
+  </nav>
+  <section class="container mt-5">
+    <div class="col-md-8 mx-auto bg-white p-4 rounded shadow">
+      <h2 class="mb-3 text-warning fw-bold">Jisajili</h2>
+      <form>
+        <input type="text" class="form-control mb-3" placeholder="Namba ya Simu (10)" maxlength="10" required>
+        <input type="text" class="form-control mb-3" placeholder="Kitambulisho cha NIDA (19...)" pattern="^(19)[0-9]{7,}$" required>
+        <select class="form-select mb-3">
+          <option>Tanzania</option><option>Kenya</option><option>Uganda</option>
+        </select>
+        <select class="form-select mb-3">
+          <option>Halotel</option><option>Vodacom</option><option>Airtel</option><option>TCCL</option><option>Mixx by Yas</option><option>Other</option>
+        </select>
+        <input type="text" class="form-control mb-3" placeholder="Username" required>
+        <select class="form-select mb-3">
+          <option>TCB</option><option>CRDB</option><option>NBC</option><option>NMB</option><option>Maendeleo</option><!-- 25 more -->
+        </select>
+        <input type="text" class="form-control mb-3" placeholder="Account Bank" required>
+        <select class="form-select mb-3"><option>Engineer</option><option>Doctor</option><option>Pilot</option><option>Teacher</option><option>Mama Lishe</option><option>Sina Kazi</option><!-- 23 more --></select>
+        <input type="email" class="form-control mb-3" placeholder="Email" required>
+        <input type="password" class="form-control mb-3" placeholder="Password" required>
+        <input type="password" class="form-control mb-3" placeholder="Confirm Password" required>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" required>
+          <label class="form-check-label">Nimetimiza miaka 18</label>
+        </div>
+        <button class="btn btn-warning w-100">Jiunge</button>
+      </form>
+    </div>
+  </section>
+  <footer class="fixed-bottom bg-dark text-warning text-center py-2">Vuna Pesa &copy; 2026</footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
