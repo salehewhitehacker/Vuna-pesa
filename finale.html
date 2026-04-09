@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHMSS Election System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+        
+        :root {
+            --neon-cyan: #00f2ff;
+            --deep-obsidian: #05070a;
+            --panel-bg: rgba(16, 20, 25, 0.95);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--deep-obsidian);
+            color: #a0aec0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            min-height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* UPLOADED SCHOOL LOGO WATERMARK */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            width: 500px;
+            height: 500px;
+            opacity: 0.08; 
+            pointer-events: none;
+            z-index: -1;
+            /* Using the uploaded school logo file */
+            background-image: url('shmss.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: brightness(1.5);
+        }
+
+        .cyber-border {
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            position: relative;
+        }
+
+        .cyber-border::before {
+            content: "";
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 10px; height: 10px;
+            border-top: 2px solid var(--neon-cyan);
+            border-left: 2px solid var(--neon-cyan);
+        }
+
+        .cyber-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+        }
+
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: var(--neon-cyan);
+        }
+
+        .btn-cyber {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-cyber:hover:not(:disabled) {
+            background: var(--neon-cyan);
+            color: var(--deep-obsidian);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .warning-box {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid #dc2626;
+            color: #ff4d4d;
+        }
+
+        .admin-trigger {
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="flex flex-col p-4 md:p-8">
+
+    <!-- WATERMARK IMAGE -->
+    <div class="watermark"></div>
+
+    <header class="container mx-auto max-w-5xl mb-8 flex justify-between items-end border-b border-cyan-900/50 pb-6">
+        <div>
+            <!-- ADMIN TRIGGER: CLICK "SHMSS" -->
+            <h1 id="admin-lock" onclick="openAdmin()" class="admin-trigger text-4xl font-bold text-white tracking-tighter uppercase hover:text-cyan-400">SHMSS</h1>
+            <p class="text-cyan-500 text-[10px] font-bold tracking-[0.4em] uppercase">Verified Institution</p>
+        </div>
+        <div class="text-xs text-cyan-400 font-mono" id="system-time">LOADING...</div>
+    </header>
+
+    <main class="container mx-auto max-w-5xl">
+        
+        <!-- Login Section -->
+        <div id="login-section" class="cyber-panel cyber-border p-8 md:p-12 max-w-lg mx-auto">
+            <div class="mb-8 text-center">
+                <h2 class="text-xl font-bold text-white uppercase tracking-widest">Voter Login</h2>
+                <p id="range-hint" class="text-[10px] text-gray-500 uppercase mt-1"></p>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-bold text-cyan-700 uppercase mb-2 tracking-widest text-center">ID Verification</label>
+                    <input type="text" id="voter-id-input" placeholder="SHMSS-2024-001" 
+                           class="cyber-input w-full p-4 font-mono text-center text-lg uppercase tracking-widest outline-none focus:border-cyan-400">
+                    
+                    <div id="auth-error-msg" class="hidden warning-box mt-4 p-4 text-[12px] font-bold text-center uppercase leading-tight">
+                    </div>
+                </div>
+                <button onclick="startVoting()" class="btn-cyber w-full py-4 tracking-widest">Verify ID</button>
+            </div>
+        </div>
+
+        <!-- Voting Section -->
+        <div id="voting-section" class="hidden space-y-8">
+            <div class="flex items-center justify-between bg-cyan-950/20 p-4 border-l-4 border-cyan-500">
+                <div class="font-mono text-xs text-cyan-100" id="active-user-display"></div>
+                <div class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Encrypted Session</div>
+            </div>
+            
+            <div id="ballot-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            
+            <button onclick="submitBallot()" class="btn-cyber w-full py-6 text-xl mt-8 tracking-widest">Finalize Selection</button>
+        </div>
+
+        <!-- Admin Section -->
+        <div id="admin-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center border-b border-cyan-500/30 pb-4">
+                <h2 class="text-2xl font-bold text-white uppercase tracking-tighter">Election Dashboard</h2>
+                <div class="flex gap-2">
+                    <button onclick="clearVotes()" class="btn-cyber px-4 py-2 text-[10px] border-red-600 text-red-500">Reset System</button>
+                    <button onclick="location.reload()" class="btn-cyber px-4 py-2 text-[10px]">Logout</button>
+                </div>
+            </div>
+            <div id="admin-live-counts" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+            <div id="admin-breakdown" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+    </main>
+
+    <script>
+        const CONFIG = { 
+            TOTAL_STUDENTS: 500, 
+            YEAR: "2024",
+            ADMIN_KEY: "ayla" 
+        };
+
+        const categories = [
+            { id: 'head', title: 'Head Prefect', candidates: ["FURAHA", "ADHEEN", "LEILA", "ABOUBAKAR"] },
+            { id: 'deputy', title: 'Deputy Prefect', candidates: ["ABRIELLE", "YONA", "RANIA", "TANISH"] },
+            { id: 'secretary', title: 'Secretary Prefect', candidates: ["ARIANNAH", "AHMED", "TWAHIBA", "FAHD"] },
+            { id: 'acad', title: 'Academic Prefect', candidates: ["LINCOLN", "GISHA", "LANTA-LILIAN", "MICHELLE"], dual: true },
+            { id: 'disc', title: 'Discipline Prefect', candidates: ["ABDULKIZA", "ABDULRASUL", "ZAITUNI", "AKLAM"], dual: true },
+            { id: 'sport', title: 'Sports Prefect', candidates: ["THABIT", "PRINCE", "WENDE", "SHAAFA"], dual: true },
+            { id: 'env', title: 'Environmental Prefect', candidates: ["GABRIEL", "YUSUPH", "AMINA", "MOZA"], dual: true },
+            { id: 'anti', title: 'Anti-Bully Prefect', candidates: ["ANMAR", "KHAMIS", "ABIGAIL", "PRECIOUS"], dual: true }
+        ];
+
+        let selections = {};
+        let currentVoterId = "";
+
+        window.onload = () => {
+            document.getElementById('range-hint').innerText = `Valid Range: SHMSS-${CONFIG.YEAR}-001 to ${CONFIG.TOTAL_STUDENTS}`;
+        };
+
+        function showError(msg) {
+            const errorBox = document.getElementById('auth-error-msg');
+            errorBox.innerHTML = msg;
+            errorBox.classList.remove('hidden');
+        }
+
+        function startVoting() {
+            const input = document.getElementById('voter-id-input');
+            const id = input.value.trim().toUpperCase();
+            const errorBox = document.getElementById('auth-error-msg');
+            errorBox.classList.add('hidden');
+            
+            if (id === CONFIG.ADMIN_KEY.toUpperCase()) {
+                openAdmin();
+                return;
+            }
+
+            // REPETITION CHECK (CRITICAL FIX)
+            const alreadyVotedList = JSON.parse(localStorage.getItem('shmss_voted_ids') || '[]');
+            
+            if (alreadyVotedList.includes(id)) {
+                input.value = "";
+                showError("🚨 ACCESS DENIED: ID " + id + " HAS ALREADY BEEN USED.");
+                return;
+            }
+
+            // Format Validation
+            const regex = new RegExp(`^SHMSS-${CONFIG.YEAR}-\\d{3}$`);
+            if (!regex.test(id)) {
+                showError("❌ FORMAT ERROR<br><span class='text-[10px]'>ID MUST BE: SHMSS-2024-###</span>");
+                return;
+            }
+
+            // Range Check
+            const num = parseInt(id.split('-')[2]);
+            if (num < 1 || num > CONFIG.TOTAL_STUDENTS) {
+                showError("❌ UNREGISTERED ID NUMBER");
+                return;
+            }
+
+            currentVoterId = id;
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('voting-section').classList.remove('hidden');
+            document.getElementById('active-user-display').innerText = `SESSION: ${id}`;
+            renderBallot();
+            window.scrollTo(0,0);
+        }
+
+        function renderBallot() {
+            const container = document.getElementById('ballot-container');
+            container.innerHTML = categories.map(cat => {
+                if (!cat.dual) {
+                    return `
+                        <div class="cyber-panel cyber-border p-6">
+                            <h3 class="text-white text-xs font-bold uppercase mb-4 border-b border-cyan-900 pb-2">${cat.title}</h3>
+                            <select onchange="selections['${cat.id}']=this.value" class="cyber-input w-full p-3 text-xs uppercase outline-none focus:border-white">
+                                <option value="">-- CHOOSE CANDIDATE --</option>
+                                ${cat.candidates.map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                } else {
+                    const half = Math.ceil(cat.candidates.length / 2);
+                    const males = cat.candidates.slice(0, half);
+                    const females = cat.candidates.slice(half);
+                    return `
+                        <div class="cyber-panel cyber-border p-6">
+                            <h3 class="text-white text-xs font-bold uppercase mb-4 border-b border-cyan-900 pb-2">${cat.title}</h3>
+                            <div class="space-y-3">
+                                <select onchange="selections['${cat.id}_m']=this.value" class="cyber-input w-full p-2 text-[10px] uppercase outline-none">
+                                    <option value="">-- MALE CANDIDATE --</option>
+                                    ${males.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                </select>
+                                <select onchange="selections['${cat.id}_f']=this.value" class="cyber-input w-full p-2 text-[10px] uppercase outline-none">
+                                    <option value="">-- FEMALE CANDIDATE --</option>
+                                    ${females.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function submitBallot() {
+            const alreadyVotedList = JSON.parse(localStorage.getItem('shmss_voted_ids') || '[]');
+            if (alreadyVotedList.includes(currentVoterId)) {
+                alert("Security breach detected: ID already used.");
+                location.reload();
+                return;
+            }
+
+            const expectedCount = categories.reduce((acc, cat) => acc + (cat.dual ? 2 : 1), 0);
+            if (Object.keys(selections).length < expectedCount) {
+                return alert("ERROR: You must vote for every category.");
+            }
+
+            let votes = JSON.parse(localStorage.getItem('shmss_vote_counts')) || {};
+            Object.values(selections).forEach(name => {
+                votes[name] = (votes[name] || 0) + 1;
+            });
+            localStorage.setItem('shmss_vote_counts', JSON.stringify(votes));
+
+            alreadyVotedList.push(currentVoterId);
+            localStorage.setItem('shmss_voted_ids', JSON.stringify(alreadyVotedList));
+
+            alert("VOTE SUBMITTED. THANK YOU.");
+            location.reload();
+        }
+
+        function openAdmin() {
+            const pass = prompt("ADMIN AUTHORIZATION:");
+            if (pass === CONFIG.ADMIN_KEY) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('voting-section').classList.add('hidden');
+                document.getElementById('admin-section').classList.remove('hidden');
+                updateAdminPanel();
+            } else if (pass !== null) {
+                alert("INVALID ACCESS KEY");
+            }
+        }
+
+        function updateAdminPanel() {
+            const votes = JSON.parse(localStorage.getItem('shmss_vote_counts')) || {};
+            const registry = JSON.parse(localStorage.getItem('shmss_voted_ids') || '[]');
+            const turnout = registry.length;
+            
+            document.getElementById('admin-live-counts').innerHTML = `
+                <div class="cyber-panel p-4 border border-cyan-800">
+                    <p class="text-[9px] uppercase font-bold text-cyan-600">Total Votes Cast</p>
+                    <p class="text-2xl font-bold text-white">${turnout}</p>
+                </div>
+                <div class="cyber-panel p-4 border border-cyan-800">
+                    <p class="text-[9px] uppercase font-bold text-cyan-600">Turnout %</p>
+                    <p class="text-2xl font-bold text-white">${((turnout/CONFIG.TOTAL_STUDENTS)*100).toFixed(1)}%</p>
+                </div>
+            `;
+
+            document.getElementById('admin-breakdown').innerHTML = categories.map(cat => {
+                const tallies = cat.candidates.map(c => `
+                    <div class="flex justify-between text-[11px] py-1 border-b border-cyan-900/30">
+                        <span>${c}</span><span class="text-cyan-400 font-bold">${votes[c] || 0}</span>
+                    </div>
+                `).join('');
+                return `<div class="cyber-panel cyber-border p-4">
+                    <h4 class="text-white text-[10px] font-bold uppercase mb-2">${cat.title}</h4>
+                    ${tallies}
+                </div>`;
+            }).join('');
+        }
+
+        function clearVotes() {
+            if(confirm("DANGER: WIPE ALL ELECTION DATA?")) {
+                localStorage.removeItem('shmss_vote_counts');
+                localStorage.removeItem('shmss_voted_ids');
+                location.reload();
+            }
+        }
+
+        setInterval(() => {
+            const el = document.getElementById('system-time');
+            if (el) el.innerText = `SYS_SYNC: ${new Date().toLocaleTimeString()}`;
+        }, 1000);
+    </script>
+</body>
+</html>
